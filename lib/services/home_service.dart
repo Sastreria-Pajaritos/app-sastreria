@@ -1,13 +1,10 @@
 import 'dart:convert';
+import 'package:app_los_pajaritos/environment/environment.dart';
 import 'package:app_los_pajaritos/models/home_models.dart';
 import 'package:http/http.dart' as http;
 
 class HomeServices {
   static Map<String, dynamic> usuarioLogueado = {};
-  static const String apiURL =
-      "https://sastrerialospajaritos.proyectowebuni.com/api";
-  static const urlAPIEmail =
-      "https://sastrerialospajaritos-86e11a91fb91.herokuapp.com/bordados_app_backend";
 
   static Future<List<Category>> getCategories() async {
     var url = "$apiURL/products/getCategories.php";
@@ -105,7 +102,6 @@ class HomeServices {
 
   static Future<dynamic> singUp(String email) async {
     var url = "$apiURL/users/create.php?email=$email";
-    print(url);
     final respuesta = await http.get(Uri.parse(url));
     if (respuesta.statusCode == 200) {
       return [
@@ -139,21 +135,28 @@ class HomeServices {
   }
 
   static Future<dynamic> sendValidateEmail(String email, String id) async {
-    print(email);
-    print(id);
     var url = "$urlAPIEmail/send-validate-email";
     final respuesta = await http.post(Uri.parse(url),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{'email': email, 'id': id}));
-    print(url);
     if (respuesta.statusCode == 200) {
       final respuestaJSON = json.decode(respuesta.body);
-      print("respuestaJSON");
       return respuestaJSON;
     }
-    print(respuesta.statusCode.toString());
+    return [];
+  }
+
+  static Future<List<Direccion>> getMisDomicilios(String userID) async {
+    var url = "$apiURL/sales/getDirecciones.php?clienteID=$userID";
+    final respuesta = await http.get(Uri.parse(url));
+
+    if (respuesta.statusCode == 200) {
+      final respuestaJSON = json.decode(respuesta.body);
+      final direcciones = Direcciones.fromJsonList(respuestaJSON);
+      return direcciones;
+    }
     return [];
   }
 }

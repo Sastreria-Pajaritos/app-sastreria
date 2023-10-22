@@ -1,3 +1,4 @@
+import 'package:app_los_pajaritos/components/app_bar_widget.dart';
 import 'package:app_los_pajaritos/components/card_category_widget.dart';
 import 'package:app_los_pajaritos/components/spinner_widget.dart';
 import 'package:app_los_pajaritos/screens/acerca_de_screen.dart';
@@ -11,8 +12,8 @@ import 'package:app_los_pajaritos/screens/product_detail_screen.dart';
 import 'package:app_los_pajaritos/screens/categories_screen.dart';
 import 'package:app_los_pajaritos/screens/products_category_screen.dart';
 import 'package:app_los_pajaritos/screens/search_screen.dart';
-import 'package:app_los_pajaritos/screens/shopping_cart.dart';
 import 'package:app_los_pajaritos/services/home_service.dart';
+import 'package:app_los_pajaritos/services/ventas_service.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
@@ -77,6 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? name = '';
   String? email = '';
   String? id = '';
+  final _vs = VentasServices();
 
   final Color bgColor = Colors.red.shade200;
 
@@ -133,66 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: bgColor,
-        foregroundColor: Colors.white,
-        title: Center(
-          child: Container(
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                color: Colors.white,
-                width: 1,
-              ),
-              borderRadius: const BorderRadius.all(
-                Radius.circular(40),
-              ),
-            ),
-            child: TextField(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => (const SearchScreen())),
-                );
-              },
-              readOnly: true,
-              decoration: InputDecoration(
-                hintText: 'Buscar en la tienda',
-                hintStyle: const TextStyle(color: Colors.grey),
-                prefixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {},
-                  iconSize: 20,
-                ),
-                contentPadding: const EdgeInsets.all(0),
-                border: InputBorder.none,
-                fillColor: Colors.white,
-              ),
-            ),
-          ),
-        ),
-        elevation: 0,
-        actions: <Widget>[
-          Container(
-            margin: const EdgeInsets.only(right: 10),
-            child: IconButton(
-              icon: const Badge(
-                label: Text('2'),
-                backgroundColor: Colors.black87,
-                child: Icon(Icons.shopping_cart, color: Colors.white),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ShoppingCart()),
-                );
-              },
-            ),
-          )
-        ],
-      ),
+      appBar: AppBarWidget.getAppBar(context, true, ''),
       body: const HomeScreen(),
       drawer: Drawer(
         child: ListView(
@@ -476,7 +419,7 @@ class HomeScreen extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
                 child: Text(
-                  'Produtos principales',
+                  'Productos principales',
                   textAlign: TextAlign.left,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -532,7 +475,9 @@ Widget categoriesButtonSection = Column(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        ProductsCategoryScreen(id: categoria.id, categoryName: categoria.name)),
+                                        ProductsCategoryScreen(
+                                            id: categoria.id,
+                                            categoryName: categoria.name)),
                               );
                             },
                             child: Text(categoria.name))))

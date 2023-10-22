@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'package:app_los_pajaritos/environment/environment.dart';
+import 'package:flutter/material.dart';
+
 class Category {
   String id;
   String name;
@@ -24,7 +28,7 @@ class Category {
   }
 
   String getImage() {
-    return "https://sastrerialospajaritos.proyectowebuni.com/api/products/imageProducts/$imageUrl";
+    return "$urlImages$imageUrl";
   }
 }
 
@@ -99,10 +103,13 @@ class Product {
   static Product fromJson(Map<String, dynamic> json) {
     return Product(
       id: json['_id']['\$oid'] as String,
-      categoryID: json['categoryID'] != null ? json['categoryID'] as String : '',
+      categoryID:
+          json['categoryID'] != null ? json['categoryID'] as String : '',
       title: json['title'] != null ? json['title'] as String : '',
-      description: json['description'] != null ? json['description'] as String : '',
-      categorySex: json['categorySex'] != null ? json['categorySex'] as String : '',
+      description:
+          json['description'] != null ? json['description'] as String : '',
+      categorySex:
+          json['categorySex'] != null ? json['categorySex'] as String : '',
       imageUrl: json['imageUrl'] != null ? json['imageUrl'] as String : '',
       inventario: Inventarios.fromJsonList(json['inventario'] ?? []),
       precio: json['precio'] != null ? json['precio'] as int : 0,
@@ -110,7 +117,7 @@ class Product {
   }
 
   String getImage() {
-    return "https://sastrerialospajaritos.proyectowebuni.com/api/products/imageProducts/$imageUrl";
+    return "$urlImages$imageUrl";
   }
 }
 
@@ -221,4 +228,151 @@ class Direcciones {
     }
     return arrDirecciones;
   }
+}
+
+class AltaCarrito {
+  String id;
+  DateTime? fechaVenta;
+  int total;
+  List<Product>? productos;
+  String clienteID;
+  String nombreCliente;
+  String emailCliente;
+  Direccion? direccionEntrega;
+
+  AltaCarrito({
+    this.id = '',
+    this.fechaVenta,
+    this.total = 0,
+    this.productos,
+    this.clienteID = '',
+    this.nombreCliente = '',
+    this.emailCliente = '',
+    this.direccionEntrega,
+  });
+
+  static AltaCarrito fromJson(Map<String, dynamic> json) {
+    return AltaCarrito(
+      id: json['_id']['\$oid'] as String,
+      fechaVenta: json['fechaVenta'] != null
+          ? json['fechaVenta'] as DateTime
+          : DateTime.now(),
+      total: json['total'] != null ? json['total'] as int : 0,
+      productos: Products.fromJsonList(json['productos'] ?? []),
+      clienteID: json['clienteID'] != null ? json['clienteID'] as String : '',
+      nombreCliente:
+          json['nombreCliente'] != null ? json['nombreCliente'] as String : '',
+      emailCliente:
+          json['emailCliente'] != null ? json['emailCliente'] as String : '',
+      direccionEntrega: json['direccionEntrega'] as Direccion,
+    );
+  }
+}
+
+class ProductCarritoModelo {
+  String categoryID;
+  String productoID;
+  String category;
+  String title;
+  String description;
+  String categorySex;
+  String imageUrl;
+  String talla;
+  int cantidad;
+  int existencia;
+  int precio;
+  int subtotal;
+
+  ProductCarritoModelo({
+    required this.categoryID,
+    required this.productoID,
+    required this.category,
+    required this.title,
+    required this.description,
+    required this.categorySex,
+    required this.imageUrl,
+    required this.talla,
+    required this.cantidad,
+    required this.existencia,
+    required this.precio,
+    required this.subtotal,
+  });
+
+  static ProductCarritoModelo fromJson(
+      Product data, String categoria, Inventario objTalla) {
+    return ProductCarritoModelo(
+        categoryID: data.categoryID,
+        productoID: data.id,
+        category: categoria,
+        title: data.title,
+        description: data.description,
+        categorySex: data.categorySex,
+        imageUrl: data.imageUrl,
+        talla: objTalla.talla,
+        cantidad: 0,
+        existencia: objTalla.inventario,
+        precio: data.precio,
+        subtotal: 0);
+  }
+
+  static ProductCarritoModelo paseJson(Map<String, dynamic> data) {
+    return ProductCarritoModelo(
+        categoryID: data['categoryID'],
+        productoID: data['productoID'],
+        category: data['category'],
+        title: data['title'],
+        description: data['description'],
+        categorySex: data['categorySex'],
+        imageUrl: data['imageUrl'],
+        talla: data['talla'],
+        cantidad: data['cantidad'],
+        existencia: data['existencia'],
+        precio: data['precio'],
+        subtotal: data['subtotal']);
+  }
+
+  String getImage() {
+    return "$urlImages$imageUrl";
+  }
+
+  Map<String, dynamic> toJson(ProductCarritoModelo prod) => {
+        "categoryID": prod.categoryID,
+        "productoID": prod.productoID,
+        "category": prod.category,
+        "title": prod.title,
+        "description": prod.description,
+        "categorySex": prod.categorySex,
+        "imageUrl": prod.imageUrl,
+        "talla": prod.talla,
+        "cantidad": prod.cantidad,
+        "existencia": prod.existencia,
+        "precio": prod.precio,
+        "subtotal": prod.subtotal
+      };
+}
+
+String cartItemModelToJson(List<ProductCarritoModelo> data) =>
+    json.encode(List<dynamic>.from(data.map((x) => x.toJson(x))));
+
+class ProductsCarritoModelo {
+  ProductsCarritoModelo();
+
+  static List<ProductCarritoModelo> fromJsonList(List<dynamic> jsonList) {
+    List<ProductCarritoModelo> arrProducts = [];
+    if (jsonList.isNotEmpty) {
+      for (var prod in jsonList) {
+        final producto = ProductCarritoModelo.paseJson(prod);
+        arrProducts.add(producto);
+      }
+    }
+    return arrProducts;
+  }
+}
+
+class BasicForm {
+  TextEditingController? _name;
+  BasicForm(String cantidad) {
+    _name = TextEditingController(text: cantidad);
+  }
+  TextEditingController get name => _name!;
 }

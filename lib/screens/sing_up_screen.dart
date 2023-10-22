@@ -1,3 +1,4 @@
+import 'package:app_los_pajaritos/components/snackbar_notifiction_widget.dart';
 import 'package:app_los_pajaritos/screens/log_in_screen.dart';
 import 'package:app_los_pajaritos/services/home_service.dart';
 import 'package:flutter/material.dart';
@@ -53,8 +54,8 @@ class SingUpScreenState extends State {
       }
       if (emailsEncontrados.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          snackMessage(context, 'Ya existe una cuenta con el correo ingresado',
-              Colors.red,
+          SnackBarWidget.snackMessage(context,
+              'Ya existe una cuenta con el correo ingresado', Colors.red,
               textColor: Colors.white),
         );
         return;
@@ -66,22 +67,20 @@ class SingUpScreenState extends State {
   void _sendEmail(BuildContext context, String email, String id) {
     HomeServices.sendValidateEmail(email, id).then((res) {
       ScaffoldMessenger.of(context).showSnackBar(
-        snackMessage(
+        SnackBarWidget.snackMessage(
             context,
             'Correo enviado, para continuar, ingrese al enlace que fue enviado a su correo electrónico',
             Colors.green.shade300,
             textColor: Colors.white),
       );
       Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LogInScreen()),
-        );
+        context,
+        MaterialPageRoute(builder: (context) => const LogInScreen()),
+      );
     }).catchError((err) {
       ScaffoldMessenger.of(context).showSnackBar(
-        snackMessage(
-            context,
-            'Error al enviar correo',
-            Colors.red,
+        SnackBarWidget.snackMessage(
+            context, 'Error al enviar correo', Colors.red,
             textColor: Colors.white),
       );
     });
@@ -289,14 +288,3 @@ class SingUpScreenState extends State {
     );
   }
 }
-
-SnackBar snackMessage(BuildContext context, String title, Color bgColor,
-        {Color textColor = Colors.black}) =>
-    SnackBar(
-      behavior: SnackBarBehavior.floating,
-      content: Text(
-        title,
-        style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-      ),
-      backgroundColor: bgColor,
-    );

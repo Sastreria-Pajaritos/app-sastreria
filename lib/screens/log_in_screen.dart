@@ -1,3 +1,4 @@
+import 'package:app_los_pajaritos/components/snackbar_notifiction_widget.dart';
 import 'package:app_los_pajaritos/screens/home_screen.dart';
 import 'package:app_los_pajaritos/screens/sing_up_screen.dart';
 import 'package:app_los_pajaritos/services/home_service.dart';
@@ -42,36 +43,35 @@ class LogInScreenState extends State {
     var usuario = emailTxt.text.toString();
     var contra = passTxt.text.toString();
     HomeServices.logIn(usuario, contra).then((res) {
-       if (res.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          snackMessage(context, 'Email o contraseña incorrectos',
-              Colors.red,
-              textColor: Colors.white),
-        );
-    } else {
-      final cliente = res[0];
-      if (cliente.isAdmin) {
+      if (res.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          snackMessage(context, 'Acceso no válido',
-              Colors.red,
+          SnackBarWidget.snackMessage(
+              context, 'Email o contraseña incorrectos', Colors.red,
               textColor: Colors.white),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          snackMessage(context, 'Bienvenido',
-              Colors.green.shade300,
-              textColor: Colors.white),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MyHomePage()),
-        );
-        _prefs!.setBool('isAuth', true);
-        _prefs!.setString('token', cliente.id);
-        _prefs!.setString('email', cliente.email);
-        _prefs!.setString('name', cliente.name);
+        final cliente = res[0];
+        if (cliente.isAdmin) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBarWidget.snackMessage(context, 'Acceso no válido', Colors.red,
+                textColor: Colors.white),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBarWidget.snackMessage(
+                context, 'Bienvenido', Colors.green.shade300,
+                textColor: Colors.white),
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const MyHomePage()),
+          );
+          _prefs!.setBool('isAuth', true);
+          _prefs!.setString('token', cliente.id);
+          _prefs!.setString('email', cliente.email);
+          _prefs!.setString('name', cliente.name);
+        }
       }
-    }
     });
   }
 
@@ -353,14 +353,3 @@ class LogInScreenState extends State {
     );
   }
 }
-
-SnackBar snackMessage(BuildContext context, String title, Color bgColor,
-        {Color textColor = Colors.black}) =>
-    SnackBar(
-      behavior: SnackBarBehavior.floating,
-      content: Text(
-        title,
-        style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-      ),
-      backgroundColor: bgColor,
-    );

@@ -1,6 +1,12 @@
+import 'package:app_los_pajaritos/components/app_bar_widget.dart';
+import 'package:app_los_pajaritos/components/snackbar_notifiction_widget.dart';
 import 'package:app_los_pajaritos/components/spinner_widget.dart';
+import 'package:app_los_pajaritos/environment/environment.dart';
 import 'package:app_los_pajaritos/models/home_models.dart';
+import 'package:app_los_pajaritos/screens/log_in_screen.dart';
+import 'package:app_los_pajaritos/screens/sing_up_screen.dart';
 import 'package:app_los_pajaritos/services/home_service.dart';
+import 'package:app_los_pajaritos/services/ventas_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -21,54 +27,89 @@ class _ProductDetailState extends State<ProductDetailView> {
   String productoID;
   String precio = '0';
   String productName = '';
+  Inventario? tallasDisponibles;
+  Product? objProducto;
+  late ProductCarritoModelo objCarritoProducto;
+  late List<Category> objCategories;
+  int cantidad = 1;
+  String category = '';
+  Inventario? objTalla;
   _ProductDetailState({required this.productoID});
   @override
   void initState() {
-    super.initState();
+    getProduct();
     precio = numberFormat.format(0);
+    super.initState();
+  }
+
+  void getProduct() {
+    HomeServices.getProduct(productoID).then((value) {
+      setState(() {
+        objProducto = value;
+        getCaterories();
+        precio = numberFormat.format(objProducto!.precio);
+        productName = objProducto!.title;
+        setDatoDefaultTalla(objProducto!);
+      });
+    });
+  }
+
+  void getCaterories() {
+    HomeServices.getCategories().then((value) {
+      setState(() {
+        if (value.isEmpty) return;
+        objCategories = value;
+        category = objCategories
+            .firstWhere((cat) => (cat.id == objProducto!.categoryID))
+            .name;
+      });
+    });
   }
 
   String getImageUrl(String productName) {
-    return "https://sastrerialospajaritos.proyectowebuni.com/api/products/imageProducts/$productName";
+    return "$urlImages$productName";
+  }
+
+  void agregarAlCarrito() {
+    if (objTalla == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBarWidget.snackMessage(
+            context, 'El producto no cuenta con categorías', Colors.red,
+            textColor: Colors.white),
+      );
+      return;
+    }
+    setState(() {
+      setDatoscarrito();
+      objCarritoProducto.cantidad = cantidad;
+    });
+    VentasServices.setProductoCarrito(objCarritoProducto);
+  }
+
+  void setDatoscarrito() {
+    setState(() {
+      objCarritoProducto =
+          ProductCarritoModelo.fromJson(objProducto!, category, objTalla!);
+    });
+  }
+
+  void setDatoDefaultTalla(Product prod) {
+    prod.inventario.forEach((i) => {if (i.inventario > 0) objTalla = i});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(productName),
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.red.shade200,
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
-          IconButton(
-              onPressed: () {},
-              icon: const Badge(
-                label: Text('2'),
-                backgroundColor: Colors.black87,
-                child: Icon(Icons.shopping_cart, color: Colors.white),
-              )),
-        ],
-      ),
-      body: FutureBuilder(
-        future: HomeServices.getProduct(productoID),
-        builder: (BuildContext context, AsyncSnapshot<Product> snapshot) {
-          if (snapshot.hasData) {
-            Future.delayed(Duration.zero, () {
-              setState(() {
-                precio = numberFormat.format(snapshot.data!.precio);
-                productName = snapshot.data!.title;
-              });
-            });
-
-            return ListView(
+      appBar: AppBarWidget.getAppBar(context, false, productName),
+      body: objProducto != null
+          ? ListView(
               children: [
                 Padding(
                   padding: const EdgeInsets.all(0),
                   child: ClipRRect(
                     child: Image.network(
-                      getImageUrl(snapshot.data!.imageUrl),
+                      getImageUrl(objProducto!.imageUrl),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -100,7 +141,7 @@ class _ProductDetailState extends State<ProductDetailView> {
                   padding: const EdgeInsets.only(
                       left: 14, right: 14, top: 5, bottom: 5),
                   child: Text(
-                    snapshot.data!.title,
+                    objProducto!.title,
                     style: const TextStyle(
                         fontSize: 22, fontWeight: FontWeight.w500),
                   ),
@@ -113,7 +154,7 @@ class _ProductDetailState extends State<ProductDetailView> {
                       bottom: MediaQuery.of(context).padding.bottom),
                   child: Text(
                     // widget.product.description,
-                    snapshot.data!.description,
+                    objProducto!.description,
                     style: const TextStyle(fontSize: 14),
                   ),
                 ),
@@ -123,21 +164,19 @@ class _ProductDetailState extends State<ProductDetailView> {
                   child: ListView(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-                      children: snapshot.data!.inventario
-                          .map((inv) => Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: OutlinedButton(
-                                  onPressed: () => print('sss'),
-                                  child: Text(inv.talla.toUpperCase()))))
-                          .toList()),
+                      children: objProducto?.inventario != null
+                          ? objProducto!.inventario
+                              .map((inv) => Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: OutlinedButton(
+                                      onPressed: () => print('sss'),
+                                      child: Text(inv.talla.toUpperCase()))))
+                              .toList()
+                          : const [Text('No hay tallas disponibles.')]),
                 )
               ],
-            );
-          } else {
-            return const SpinnerWidget();
-          }
-        },
-      ),
+            )
+          : const SpinnerWidget(),
       bottomNavigationBar: Container(
         color: Colors.black87,
         height: 80 + MediaQuery.of(context).padding.bottom,
@@ -172,7 +211,9 @@ class _ProductDetailState extends State<ProductDetailView> {
             const Spacer(),
             SizedBox(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  agregarAlCarrito();
+                },
                 child: const Text("Agregar al carrito"),
               ),
             ),
